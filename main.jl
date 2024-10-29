@@ -103,9 +103,9 @@ function main()
 
     # Quality map - new dtype? phasequality
     println("[INFO] Generating phase quality map...")
-    mkpath("raw")
+    mkpath("phase-quality")
     qmap = romeovoxelquality(phase_combined; magnitude_combined, TEs=TEs)
-    savenii(qmap, "phase-quality.nii.gz", "raw", phase_header)
+    savenii(qmap, "phase-quality.nii.gz", "phase-quality", phase_header)
 
     # Phase+mag mask - mask
     println("[INFO] Generating mask...")
@@ -115,11 +115,11 @@ function main()
 
     # T2* and R2* mapping - neuro/anat/qmri
     println("[INFO] Generating T2* and R2* maps...")
-    mkpath("raw")
+    mkpath("qmap")
     t2s = NumART2star(magnitude_combined, TEs)
-    savenii(t2s, "T2star.nii.gz", "raw", phase_header)
+    savenii(t2s, "T2star.nii.gz", "qmap", phase_header)
     r2s = r2s_from_t2s(t2s)
-    savenii(r2s, "R2star.nii.gz", "raw", phase_header)
+    savenii(r2s, "R2star.nii.gz", "qmap", phase_header)
 
     # B0 - neuro/fmap
     println("[INFO] Generating B0 field map...")
