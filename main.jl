@@ -1,10 +1,12 @@
 #!/usr/bin/env julia
+
 import Pkg
 try
-    using MriResearchTools, ArgParse, JSON
+    using MriResearchTools, JSON
 catch
-    Pkg.add(["MriResearchTools", "ArgParse", "JSON"])
-    using MriResearchTools, ArgParse, JSON
+    Pkg.add(Pkg.PackageSpec(name="JSON", version=v"0.21.4"))
+    Pkg.add(Pkg.PackageSpec(name="MriResearchTools", version=v"3.2.0"))
+    using MriResearchTools, JSON
 end
 
 # Load JSON data from file
@@ -87,48 +89,44 @@ function main()
     magnitude_combined = combine_images(magnitude_images)
     phase_combined = combine_images(phase_images)
 
-    # Create output folder
-    println("[INFO] Creating output directory...")
-    outputFolder = "outputFolder"
-    mkpath(outputFolder)
-
     # Phase offset removal
     println("[INFO] Removing phase offsets...")
     combined = mcpc3ds(phase_combined, magnitude_combined; TEs)
     phase_combined = combined.phase
     magnitude_combined = combined.mag
-    savenii(phase_combined, "phase_offsetremoved", outputFolder, phase_header)
-    savenii(magnitude_combined, "mag_offsetremoved", outputFolder, phase_header)
 
-    # Unwrapping
+    # Unwrapping - t2starw with part-phase + unwrapped
     println("[INFO] Phase unwrapping...")
+    mkpath("unwrapped")
     unwrapped = romeo(phase_combined; mag=magnitude_combined, TEs=TEs)
-    savenii(unwrapped, "unwrapped", outputFolder, phase_header)
+    savenii(unwrapped, "t2starw.nii.gz", "unwrapped", phase_header)
 
-    # Quality map
+    # Quality map - new dtype? phasequality
     println("[INFO] Generating phase quality map...")
+    mkpath("raw")
     qmap = romeovoxelquality(phase_combined; magnitude_combined, TEs=TEs)
-    savenii(qmap, "quality_map", outputFolder, phase_header)
+    savenii(qmap, "phase-quality.nii.gz", "raw", phase_header)
 
-    # Phase+mag mask
+    # Phase+mag mask - mask
     println("[INFO] Generating mask...")
+    mkpath("mask")
     mask = robustmask(qmap)
-    savenii(mask, "mask", outputFolder, phase_header)
+    savenii(mask, "mask.nii.gz", "mask", phase_header)
 
-    # T2* and R2* mapping
+    # T2* and R2* mapping - neuro/anat/qmri
     println("[INFO] Generating T2* and R2* maps...")
+    mkpath("raw")
     t2s = NumART2star(magnitude_combined, TEs)
-    savenii(t2s, "t2s", outputFolder, phase_header)
-
+    savenii(t2s, "T2star.nii.gz", "raw", phase_header)
     r2s = r2s_from_t2s(t2s)
-    savenii(r2s, "r2s", outputFolder, phase_header)
+    savenii(r2s, "R2star.nii.gz", "raw", phase_header)
 
-    # B0
+    # B0 - neuro/fmap
     println("[INFO] Generating B0 field map...")
+    mkpath("fmap")
     B0 = calculateB0_unwrapped(unwrapped, magnitude_combined, TEs)
-    savenii(B0, "b0", outputFolder, phase_header)
+    savenii(B0, "fieldmap.nii.gz", "fmap", phase_header)
 end
 
-# Run the main function
 main()
 

@@ -142,4 +142,10 @@ product.json
 
 julia_depot/
 julia-1.9.3/
-outputFolder/
+mask/
+qmri/
+fmap/
+unwrapped/
+phase-quality/
+raw/
+
