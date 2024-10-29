@@ -115,11 +115,11 @@ function main()
 
     # T2* and R2* mapping - neuro/anat/qmri
     println("[INFO] Generating T2* and R2* maps...")
-    mkpath("qmap")
+    mkpath("qmri")
     t2s = NumART2star(magnitude_combined, TEs)
-    savenii(t2s, "T2star.nii.gz", "qmap", phase_header)
+    savenii(t2s, "T2star.nii.gz", "qmri", phase_header)
     r2s = r2s_from_t2s(t2s)
-    savenii(r2s, "R2star.nii.gz", "qmap", phase_header)
+    savenii(r2s, "R2star.nii.gz", "qmri", phase_header)
 
     # B0 - neuro/fmap
     println("[INFO] Generating B0 field map...")
