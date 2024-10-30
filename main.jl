@@ -133,10 +133,36 @@ function main()
     B0 = calculateB0_unwrapped(unwrapped, magnitude_combined, TEs)
     savenii(B0, "fieldmap.nii.gz", "fmap", phase_header)
 
-    # Write fieldmap.json file with units
+    # Write fieldmap sidecar file with units
     println("[INFO] Writing fieldmap metadata...")
     open("fmap/fieldmap.json", "w") do file
         JSON.print(file, Dict("Units" => "Hz"))
+    end
+
+    # Copy or generate magnitude JSON sidecar
+    magnitude_json_path = replace(magnitude_paths[1], r"\.nii(\.gz)?$" => ".json")
+    if isfile(magnitude_json_path)
+        println("[INFO] Copying magnitude JSON sidecar to fmap directory...")
+        cp(magnitude_json_path, joinpath("fmap", "magnitude.json"), force=true)
+    else
+        # Attempt to find the first `meta` object in `_inputs` from config_data
+        meta_data = nothing
+        for entry in config_data["_inputs"]
+            if entry["id"] == "magnitude" && "meta" in keys(entry)
+                meta_data = entry["meta"]
+                break
+            end
+        end
+
+        # Check if meta data was found and write it to fmap/magnitude.json
+        if meta_data != nothing
+            open("fmap/magnitude.json", "w") do file
+                JSON.print(file, meta_data)
+            end
+            println("[INFO] Written magnitude.json to fmap directory.")
+        else
+            @warn "No information found to generate magnitude.json - skipping..."
+        end
     end
 end
 
