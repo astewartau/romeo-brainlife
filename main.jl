@@ -89,6 +89,12 @@ function main()
     magnitude_combined = combine_images(magnitude_images)
     phase_combined = combine_images(phase_images)
 
+    # Calculate sum-of-squares for magnitude images along the 4th dimension
+    println("[INFO] Calculating sum-of-squares for magnitude images...")
+    magnitude_sos = sqrt.(sum(magnitude_combined .^ 2, dims=4))
+    mkpath("fmap")
+    savenii(magnitude_sos, "magnitude.nii.gz", "fmap", phase_header)
+
     # Phase offset removal
     println("[INFO] Removing phase offsets...")
     combined = mcpc3ds(phase_combined, magnitude_combined; TEs)
@@ -126,6 +132,12 @@ function main()
     mkpath("fmap")
     B0 = calculateB0_unwrapped(unwrapped, magnitude_combined, TEs)
     savenii(B0, "fieldmap.nii.gz", "fmap", phase_header)
+
+    # Write fieldmap.json file with units
+    println("[INFO] Writing fieldmap metadata...")
+    open("fmap/fieldmap.json", "w") do file
+        JSON.print(file, Dict("Units" => "Hz"))
+    end
 end
 
 main()
