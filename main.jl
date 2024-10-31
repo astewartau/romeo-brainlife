@@ -60,6 +60,15 @@ function main()
     println("[INFO] Extracting information...")
     magnitude_paths, phase_paths, TEs = extract_info(config_data)
 
+    # Check for equal number of magnitude images, phase images, and TEs
+    if length(magnitude_paths) != length(phase_paths) || length(magnitude_paths) != length(TEs)
+        println("[ERROR] Number of magnitude images (" * string(length(magnitude_paths)) * 
+                "), phase images (" * string(length(phase_paths)) * 
+                "), and TEs (" * string(length(TEs)) * 
+                ") do not match! Exiting...")
+        exit(1)
+    end
+
     # Check all files exist before proceeding
     println("[INFO] Checking files exist...")
     all_files_exist = true
